@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-#WOUT WAS HIER
+#NATHANIEL WAS HIER
 
 import numpy as np
 import pylab as pl
