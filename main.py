@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+#WOUT WAS HIER
+
 import numpy as np
 import pylab as pl
 import random
@@ -27,27 +29,27 @@ def Decide_with_prob(player_strategy, player_payoff, strategy,neighbor_payoff, p
 #     print "neighbor_payoff " + str(neighbor_payoff)
     length = strategy.shape[0]
     prob = np.zeros(length)
-    
+
     #calculates the probability
     max_payoff = max(max(p[0:]) for p in payoff_system)
     min_payoff = min(min(p[0:]) for p in payoff_system)
-                    
+
     for i in range(length):
             wi = player_payoff
             wj = neighbor_payoff[i]
             prob[i] = calcprob = (1 + (wj - wi)/ (4* (max_payoff - min_payoff)))/2
-          
+
     #pick random number and decide to change strategy or not
     random_array = range(length)
     random_neighbor = np.random.choice(random_array)
     strategy_neigbor = strategy[random_neighbor]
-    Pij = prob[random_neighbor] 
+    Pij = prob[random_neighbor]
     if player_strategy == strategy_neigbor:
        return player_strategy
-    else: 
+    else:
        return np.random.choice([player_strategy, strategy_neigbor], p=[1-Pij,Pij])
-    
-            
+
+
 
 def getneighbours( M, i, j ):
     """
@@ -69,11 +71,11 @@ def getneighbours( M, i, j ):
                  nh = np.append(nh, M[0, j+jx])
             elif i+jx >= Lenght_Y:
                  nh = np.append(nh, M[i+ix, 0])
-            #0 > i+jx  
-            else: 
+            #0 > i+jx
+            else:
                  l = Lenght_Y - 1
                  nh = np.append(nh, M[i+ix,l])
-                
+
     return nh.astype(int)
 
 def valid_neighbour(i,j, Lenght_X, Lenght_Y):
@@ -82,8 +84,8 @@ def valid_neighbour(i,j, Lenght_X, Lenght_Y):
     if (0 <= i < Lenght_X) and (0 <= j < Lenght_Y):
         return True
     else:
-        return False 
-    
+        return False
+
 
 def run( initial, nruns, payoff ):
     """
@@ -92,7 +94,7 @@ def run( initial, nruns, payoff ):
     - nruns   is the number of iterations
     """
     S = np.zeros( (N,N,nruns),dtype=np.int ); # strategy array , maakt N op N matrixen n keer aan
-    P = np.zeros( (N,N,nruns),dtype=np.int ); # payoff   array 
+    P = np.zeros( (N,N,nruns),dtype=np.int ); # payoff   array
     S[:,:,0]=initial; #initial strategies
     for t in range(nruns-1):
         #for all_players: interact_with_neighbors, give_payoff
@@ -103,7 +105,7 @@ def run( initial, nruns, payoff ):
                 no = getneighbours(P[:,:,t],i,j); # get neighbour payoffs
                 #calculate player payoff = sum of game with his neighbours
                 P[i,j,t]=np.sum(payoff[np.zeros(nh.shape[0],dtype=np.int)+S[i,j,t], nh ] );
-                no = getneighbours(P[:,:,t],i,j); # get neighbour payoffs      
+                no = getneighbours(P[:,:,t],i,j); # get neighbour payoffs
         #for all_pllayers: choose_random_neighbor, change_strategy?
         for i in range(N):
             for j in range(N):
@@ -127,12 +129,12 @@ def loop(Fc, Payoff, special=False):
         initial[9,9] = 0
     for k in range(amount_of_runs):
         print k
-        (S,P) = run( initial, 100, Payoff); 
+        (S,P) = run( initial, 100, Payoff);
         result[k] = fraction_cop(S,N)
     return average_of_all_runs(result)
 
 
 
-%matplotlib inline  
+%matplotlib inline
 var = PD
 PD_results = [loop(0.3,var),loop(0.5,var),loop(0.7,var), loop(1,var,True)]
