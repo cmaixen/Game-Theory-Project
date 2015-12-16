@@ -50,6 +50,32 @@ def Decide_with_prob(player_strategy, player_payoff, strategy,neighbor_payoff, p
        return np.random.choice([player_strategy, strategy_neigbor], p=[1-Pij,Pij])
 
 
+def payoff_calc(p,q,Dg,Dr):
+    """
+    Returns the payoff for a player using strategy "p" against an opponent
+    using strategy "q", or the array of payoffs when playing against
+    opponents using the strategies in array "q".
+    """
+    R = 1.0       #reward
+    S = -Dr     #sucker's payoff
+    T = 1.0 + Dg  #temptation
+    P = 0.0       #punishment
+    
+    payoff = (R-S-T+P)*p*q + (S-P)*p + (T-P)*q + P
+    return payoff
+
+
+#This function should eventually replace Decide_with_prob
+def strat_update(p_strat, p_pay, n_strats, n_pays, updaterule):
+    """
+    Returns updated strategy of player p depending on payoffs
+    and strategies of neighbors n.
+    """
+    if updaterule == 1: #strategy Imitation Max
+        stratind = np.argmax(np.insert(n_pays,0,p_pay))
+        #in case of multiple maxima, argmax only returns first instance of maximum.
+        return np.insert(n_strats,0,p_strat)[stratind]
+
 
 def getneighbours( M, i, j ):
     """
