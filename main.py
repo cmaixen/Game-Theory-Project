@@ -138,3 +138,37 @@ def loop(Fc, Payoff, special=False):
 %matplotlib inline
 var = PD
 PD_results = [loop(0.3,var),loop(0.5,var),loop(0.7,var), loop(1,var,True)]
+
+
+
+
+#Metagrid of 11 x 11 with parameters Dr and Dg
+
+#20 runs
+def run_experiment():
+    axis = np.arange(0.0,1.1,0.1) #11 points
+    grid_results = []
+    for i in range(20):
+        grid = np.zeros((11, 11))
+        for x in range(11):
+            Dr = axis[x]    
+            for y in range(11):
+                Dg = axis[y]
+                result = 1 #>>>> RUN HERE WITH Dr AND Dg PARAMETERS AND ASSIGN TO RESULT <<<
+                grid[y,x] =  result #if we save do  grid[y,x] we can print the grid and respect the axisses 
+        grid_results.append(grid)
+    return calculate_mean_grid(grid_results)
+
+def calculate_mean_grid(grids):
+    amount_of_grids,rows,columns = np.array(grids).shape
+    mean_grid = np.zeros((11, 11))
+    for i in range(rows):
+        for j in range(columns):
+            total = 0.0
+            for grid in grids:
+                total += grid[i,j]
+            mean_value = total / amount_of_grids
+            mean_grid[i,j] = mean_value 
+    return mean_grid
+
+    
