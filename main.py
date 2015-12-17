@@ -15,7 +15,8 @@ H = np.array([[1, 0.5],[0.5, 0]]) #harmony
 SD = np.array([[1, 0.5],[1.5, 0]]) #snowdrift
 SH = np.array([[1, -0.5], [0.5, 0]]) #stag-hunt
 
-
+# degree
+degree = 8
 # grid size
 N=20;
 
@@ -60,7 +61,7 @@ def payoff_calc(p,q,Dg,Dr):
     S = -Dr     #sucker's payoff
     T = 1.0 + Dg  #temptation
     P = 0.0       #punishment
-    
+
     payoff = (R-S-T+P)*p*q + (S-P)*p + (T-P)*q + P
     return payoff
 
@@ -112,8 +113,13 @@ def valid_neighbour(i,j, Lenght_X, Lenght_Y):
     else:
         return False
 
+def accumulate_payoff(str_p,str_n,Dg,Dr,payoff_func):
+    payoff = 0
+    for i in range(str_n):
+        payoff += payoff_func(str_p, str_n[i], Dg, Dr)
+    return payoff
 
-def run( initial, nruns, payoff ):
+def run( initial, nruns, Dg, Dr, payoff_func, strategy):
     """
     - initial holds the initial choice of strategy
     - strat   holds numbers symbolizing the strategy (mapped by num2strat)
@@ -128,21 +134,24 @@ def run( initial, nruns, payoff ):
             for j in range(N):
                 #get neighbours strategy
                 nh = getneighbours(S[:,:,t],i,j); # get neighbour strategies
-                no = getneighbours(P[:,:,t],i,j); # get neighbour payoffs
+                #no = getneighbours(P[:,:,t],i,j); # get neighbour payoffs
                 #calculate player payoff = sum of game with his neighbours
-                P[i,j,t]=np.sum(payoff[np.zeros(nh.shape[0],dtype=np.int)+S[i,j,t], nh ] );
-                no = getneighbours(P[:,:,t],i,j); # get neighbour payoffs
+                str_p = S[i,j,t] #strategy of player at [i,j,t]
+                P[i,j,t]=accumulate_payoff(str_p,nh,Dg,Dr,payoff_func)#update payoff
+                #P[i,j,t]=np.sum(payoff[np.zeros(nh.shape[0],dtype=np.int)+S[i,j,t], nh ] );
+                #no = getneighbours(P[:,:,t],i,j); # get neighbour payoffs
         #for all_pllayers: choose_random_neighbor, change_strategy?
         for i in range(N):
             for j in range(N):
                 #get neighbours strategy
                 nh = getneighbours(S[:,:,t],i,j); # get neighbour strategies
                 no = getneighbours(P[:,:,t],i,j); # get neighbour payoffs
-                S[i,j,t+1]= Decide_with_prob(S[i,j,t],  P[i,j,t], nh, no, payoff)
+                #S[i,j,t+1]= Decide_with_prob(S[i,j,t],  P[i,j,t], nh, no, payoff)
+                str_p = S[i,j,t] #strategy of player at [i,j,t]
+                po_p = P[i,j,t] #payoff of player at [i,j,t]
+                S[i,j,t+1]= strat_update(str_p,po_p,nh,no,strategy)
 
     return (S,P);
-
-
 
 
 
@@ -177,11 +186,11 @@ def run_experiment():
     for i in range(20):
         grid = np.zeros((11, 11))
         for x in range(11):
-            Dr = axis[x]    
+            Dr = axis[x]
             for y in range(11):
                 Dg = axis[y]
                 result = 1 #>>>> RUN HERE WITH Dr AND Dg PARAMETERS AND ASSIGN TO RESULT <<<
-                grid[y,x] =  result #if we save do  grid[y,x] we can print the grid and respect the axisses 
+                grid[y,x] =  result #if we save do  grid[y,x] we can print the grid and respect the axisses
         grid_results.append(grid)
     return calculate_mean_grid(grid_results)
 
@@ -194,7 +203,5 @@ def calculate_mean_grid(grids):
             for grid in grids:
                 total += grid[i,j]
             mean_value = total / amount_of_grids
-            mean_grid[i,j] = mean_value 
+            mean_grid[i,j] = mean_value
     return mean_grid
-
-    
