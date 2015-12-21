@@ -87,7 +87,7 @@ def getneighbours( M, i, j ):
     (Lenght_X,Lenght_Y)=M.shape; #geeft de lengtematen van matrix
     for ix in [-1,0,1]:
         for jx in [-1,0,1]:
-            if abs(ix)==abs(jx) : continue # with  this you will only calculate the neighbour on the left, right, up and down.
+            if ix == 0 and jx == 0: continue # with  this we don't calculate ourselves
             if valid_neighbour(i+ix, j+jx, Lenght_X, Lenght_Y):
                 nh = np.append(nh,M[i+ix, j+jx])
             #grenzen worden overschreden
@@ -119,16 +119,16 @@ def accumulate_payoff(str_p,str_n,Dg,Dr,payoff_func):
         payoff += payoff_func(str_p, str_n[i], Dg, Dr)
     return payoff
 
-def run( initial, nruns, Dg, Dr, payoff_func, strategy):
+def run( initial, generations, Dg, Dr, payoff_func, strategy):
     """
     - initial holds the initial choice of strategy
     - strat   holds numbers symbolizing the strategy (mapped by num2strat)
     - nruns   is the number of iterations
     """
-    S = np.zeros( (N,N,nruns),dtype=np.int ); # strategy array , maakt N op N matrixen n keer aan
-    P = np.zeros( (N,N,nruns),dtype=np.int ); # payoff   array
+    S = np.zeros( (N,N,generations),dtype=np.int ); # strategy array , maakt N op N matrixen n keer aan
+    P = np.zeros( (N,N,generations),dtype=np.int ); # payoff   array
     S[:,:,0]=initial; #initial strategies
-    for t in range(nruns-1):
+    for t in range(generations-1):
         #for all_players: interact_with_neighbors, give_payoff
         for i in range(N):
             for j in range(N):
@@ -174,8 +174,17 @@ def loop(Fc, Payoff, special=False):
 var = PD
 PD_results = [loop(0.3,var),loop(0.5,var),loop(0.7,var), loop(1,var,True)]
 
+#Makes initial discrite strategy matrix with C = 0.5
+def init_discrete():
+    initial = np.array([np.random.choice([True,False], p=[0.5,0.5]) for i in range(N*N)]).reshape(N,N); # random initial strategies
+    return initial
 
-
+#Makes initial uniform distributed continuous matrix
+#interval: [0.0;1.0[
+#returns a matrix of (N, N)
+def init_continuos():
+    uniform = np.random.uniform(0.0,1.0,(N,N))
+    return uniform
 
 #Metagrid of 11 x 11 with parameters Dr and Dg
 
