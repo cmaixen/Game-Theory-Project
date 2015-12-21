@@ -184,6 +184,9 @@ def init_discrete():
 #returns a matrix of (N, N)
 def init_continuos():
     uniform = np.random.uniform(0.0,1.0,(N,N))
+    for i in range(N):
+        for j in range(N):
+            uniform[i,j] = round(uniform[i,j], 2)
     return uniform
 
 #Metagrid of 11 x 11 with parameters Dr and Dg
