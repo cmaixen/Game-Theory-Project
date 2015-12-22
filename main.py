@@ -40,11 +40,11 @@ def shuffle_two_alligned_lists(list1,list2):
     list1_shuf = []
     list2_shuf = []
     index_shuf = range(len(list1))
-    shuffle(index_shuf)
+    random.shuffle(index_shuf)
     for i in index_shuf:
         list1_shuf.append(list1[i])
         list2_shuf.append(list2[i])
-    return list1_shuf, list2.shuf
+    return list1_shuf, list2_shuf
 
 
 
@@ -55,8 +55,8 @@ def strat_update(player_strategy, player_payoff, neighbour_strategies, neighbour
     and strategies of neighbors n.
     """
     if updaterule == 1: #strategy Imitation Max
-        payoffs = np.concatenate((player_payoff,neighbour_payoffs), axis=0)
-        strategies = np.concatenate((player_strategy,neighbour_strategies), axis=0)
+        payoffs = np.concatenate(([player_payoff],neighbour_payoffs), axis=0)
+        strategies = np.concatenate(([player_strategy],neighbour_strategies), axis=0)
         #We shuffle because when all payoffs are equal a random strategy needs to be returned,
         #with argmax if all are equal only the first will be returned.
         payoffs, strategies = shuffle_two_alligned_lists(payoffs,strategies)
@@ -68,8 +68,7 @@ def strat_update(player_strategy, player_payoff, neighbour_strategies, neighbour
 def getneighbours( M, i, j ):
 
     """
-    MOET NOG WORDEN AANGEPAST KRIJG ERROR BIJ GRENZEN ZOALS -1, 70
-    returns the 4 neighbours of i,j from matrix M with
+    returns the 8 neighbours of i,j from matrix M with
     boundary restrictions
     """
     nh= [];
@@ -83,8 +82,8 @@ def getneighbours( M, i, j ):
                 nh = np.append(nh,M[i+ix, j+jx])
                 #grenzen worden overschreden
             else:
-                xn #x-value neighbor
-                yn #y-value neighbor
+                #xn x-value neighbor
+                #yn y-value neighbor
 
                 #We kijken of x binnen de grenzen valt
                 #X < 0
@@ -112,8 +111,8 @@ def getneighbours( M, i, j ):
                     yn = i+jx
 
                 nh = np.append(nh, M[xn, yn])
+    return nh.astype(float)
 
-    return nh.astype(int)
 
 
 #check if neighbor is not out of the lattice
@@ -131,17 +130,18 @@ def accumulate_payoff(str_p,str_n,Dg,Dr):
     return payoff
 
 def run(initial,Dg, Dr,strategy=1, generations=3000, N=70): #3000 generations met 70x70 grid
-
+    
     """
     - initial holds the initial choice of strategy
     - strat   holds numbers symbolizing the strategy (mapped by num2strat)
     """
-
-    S = np.zeros( (N,N,generations),dtype=np.int ); # strategy array , maakt N op N matrixen n keer aan
-    P = np.zeros( (N,N,generations),dtype=np.int ); # payoff   array
+    
+    S = np.zeros( (N,N,generations),dtype=np.float ); # strategy array , maakt N op N matrixen n keer aan
+    P = np.zeros( (N,N,generations),dtype=np.float ); # payoff   array
     S[:,:,0]=initial; #initial strategy voor de eerste matrix
-
+    
     for t in range(generations-1):
+#         print "generation " + str(t) 
         #for all_players: interact_with_neighbors, give_payoff
         for i in range(N):
             for j in range(N):
@@ -187,15 +187,17 @@ def run_experiment():
     axis = np.arange(0.0,1.1,0.1) #11 points
     grid_results = []
     for i in range(20):
+        print 'NEW ITERATION: ' + str(i)
         initial = init_continuos() # random initial strategies
         grid = np.zeros((11, 11))
         for x in range(11):
             Dr = axis[x]
             for y in range(11):
                 Dg = axis[y]
+                print "Dg Value= " + str(Dg) + "Dr Value= " + str(Dr)
                 S,P = run(initial,Dg,Dr)
                 result=S[:,:,-1] #take the last strategies
-                grid[y,x] =  result #if we save do  grid[y,x] we can print the grid and respect the axisses
+                grid[y,x] = np.mean(result) #if we save do  grid[y,x] we can print the grid and respect the axisses
         grid_results.append(grid)
     return calculate_mean_grid(grid_results)
 
@@ -212,4 +214,40 @@ def calculate_mean_grid(grids):
     return mean_grid
 
 
-run_experiment()
+
+### START EXPERIMENT ###
+
+result = run_experiment()
+
+
+### SAVE RESULT ###
+import pickle
+
+output = open('mean_frac_cop_continous.pkl', 'wb')
+mean_frac_cop_continous = result
+pickle.dump(mean_frac_cop_continous, output)
+output.close()
+
+
+#### PLOT CODE #####
+
+import matplotlib.pyplot as plt
+import numpy as np
+import matplotlib.colors as colors
+# %matplotlib inline
+
+plt.title('Avarage of Fraction of cooperation with continous values')
+# set the limits of the plot to the limits of the data
+X = Y = np.arange(0.0,1.1,0.1) 
+plt.pcolormesh(X,Y,result,cmap=plt.cm.jet, vmin=0.0, vmax=1.0, norm = colors.Normalize() )
+# plt.axis([0.0, 1.0, 0.0, 1.0])
+plt.xlabel('Dr')
+plt.ylabel('Dg')
+plt.colorbar()
+plt.savefig('mean_frac_cop_continous')
+plt.show()
+plt.close()
+
+
+### END PLOT CODE ###
+
