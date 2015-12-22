@@ -77,20 +77,41 @@ def getneighbours( M, i, j ):
     for ix in [-1,0,1]:
         for jx in [-1,0,1]:
             if ix == 0 and jx == 0: continue # with  this we don't calculate ourselves
+            #Deze if-test is enkel juist als beide binnen de grenzen vallen
+            #Deze test mag ook verwijderd worden want dit wordt ook getest in het else-gedeelte
             if valid_neighbour(i+ix, j+jx, Lenght_X, Lenght_Y):
                 nh = np.append(nh,M[i+ix, j+jx])
-            #grenzen worden overschreden
-            elif 0 > i+ix:
-                l = Lenght_X - 1
-                nh = np.append(nh, M[l, j+jx])
-            elif i+ix >= Lenght_X:
-                 nh = np.append(nh, M[0, j+jx])
-            elif i+jx >= Lenght_Y:
-                 nh = np.append(nh, M[i+ix, 0])
-            #0 > i+jx
+                #grenzen worden overschreden
             else:
-                 l = Lenght_Y - 1
-                 nh = np.append(nh, M[i+ix,l])
+                xn #x-value neighbor
+                yn #y-value neighbor
+
+                #We kijken of x binnen de grenzen valt
+                #X < 0
+                if 0 > i+ix:
+                    xn = Lenght_X - 1
+                    #nh = np.append(nh, M[l, j+jx])
+                #X >= Lenght_X
+                elif i+ix >= Lenght_X:
+                    xn = 0
+                    #nh = np.append(nh, M[0, j+jx])
+                #0 < X < Lenght_X
+                else:
+                    xn = i+ix
+                #We kijken of y binnen de grenzen valt
+                # Y >= Lenght_Y
+                if i+jx >= Lenght_Y:
+                    yn = 0
+                    #nh = np.append(nh, M[i+ix, 0])
+                #Y < 0
+                elif 0 > i+jx:
+                    yn = Lenght_Y - 1
+                    #nh = np.append(nh, M[i+ix,l])
+                # 0 < Y < Lenght_Y
+                else:
+                    yn = i+jx
+
+                nh = np.append(nh, M[xn, yn])
 
     return nh.astype(int)
 
@@ -110,16 +131,16 @@ def accumulate_payoff(str_p,str_n,Dg,Dr):
     return payoff
 
 def run(initial,Dg, Dr,strategy=1, generations=3000, N=70): #3000 generations met 70x70 grid
-    
+
     """
     - initial holds the initial choice of strategy
     - strat   holds numbers symbolizing the strategy (mapped by num2strat)
     """
-    
+
     S = np.zeros( (N,N,generations),dtype=np.int ); # strategy array , maakt N op N matrixen n keer aan
     P = np.zeros( (N,N,generations),dtype=np.int ); # payoff   array
     S[:,:,0]=initial; #initial strategy voor de eerste matrix
-    
+
     for t in range(generations-1):
         #for all_players: interact_with_neighbors, give_payoff
         for i in range(N):
