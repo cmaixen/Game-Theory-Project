@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-
-#NATHANIEL WAS HIER
-
 import numpy as np
 import pylab as pl
 import random
@@ -15,41 +12,13 @@ H = np.array([[1, 0.5],[0.5, 0]]) #harmony
 SD = np.array([[1, 0.5],[1.5, 0]]) #snowdrift
 SH = np.array([[1, -0.5], [0.5, 0]]) #stag-hunt
 
-# degree
+# degree = amount of neighbours
 degree = 8
-# grid size
-N=20;
+# lattice network size
+N=70 #4900 players in a 70x70 grid
 
 # player's strategies
 #p strategy
-
-def Decide_with_prob(player_strategy, player_payoff, strategy,neighbor_payoff, payoff_system):
-#     print "payoff_player " + str(player_payoff)
-#     print "player_strategy " + str(player_strategy)
-#     print "neigbors_strategy " + str(strategy)
-#     print "neighbor_payoff " + str(neighbor_payoff)
-    length = strategy.shape[0]
-    prob = np.zeros(length)
-
-    #calculates the probability
-    max_payoff = max(max(p[0:]) for p in payoff_system)
-    min_payoff = min(min(p[0:]) for p in payoff_system)
-
-    for i in range(length):
-            wi = player_payoff
-            wj = neighbor_payoff[i]
-            prob[i] = calcprob = (1 + (wj - wi)/ (4* (max_payoff - min_payoff)))/2
-
-    #pick random number and decide to change strategy or not
-    random_array = range(length)
-    random_neighbor = np.random.choice(random_array)
-    strategy_neigbor = strategy[random_neighbor]
-    Pij = prob[random_neighbor]
-    if player_strategy == strategy_neigbor:
-       return player_strategy
-    else:
-       return np.random.choice([player_strategy, strategy_neigbor], p=[1-Pij,Pij])
-
 
 def payoff_calc(p,q,Dg,Dr):
     """
@@ -66,20 +35,40 @@ def payoff_calc(p,q,Dg,Dr):
     return payoff
 
 
+def shuffle_two_alligned_lists(list1,list2):
+    # Given list1 and list2
+    list1_shuf = []
+    list2_shuf = []
+    index_shuf = range(len(list1))
+    shuffle(index_shuf)
+    for i in index_shuf:
+        list1_shuf.append(list1[i])
+        list2_shuf.append(list2[i])
+    return list1_shuf, list2.shuf
+
+
+
 #This function should eventually replace Decide_with_prob
-def strat_update(p_strat, p_pay, n_strats, n_pays, updaterule):
+def strat_update(player_strategy, player_payoff, neighbour_strategies, neighbour_payoffs, updaterule=1):
     """
     Returns updated strategy of player p depending on payoffs
     and strategies of neighbors n.
     """
     if updaterule == 1: #strategy Imitation Max
-        stratind = np.argmax(np.insert(n_pays,0,p_pay))
-        #in case of multiple maxima, argmax only returns first instance of maximum.
-        return np.insert(n_strats,0,p_strat)[stratind]
+        payoffs = np.concatenate((player_payoff,neighbour_payoffs), axis=0)
+        strategies = np.concatenate((player_strategy,neighbour_strategies), axis=0)
+        #We shuffle because when all payoffs are equal a random strategy needs to be returned,
+        #with argmax if all are equal only the first will be returned.
+        payoffs, strategies = shuffle_two_alligned_lists(payoffs,strategies)
+        #get index of the max
+        stratind = np.argmax(payoffs)
+        return strategies[stratind]
 
 
 def getneighbours( M, i, j ):
+
     """
+    MOET NOG WORDEN AANGEPAST KRIJG ERROR BIJ GRENZEN ZOALS -1, 70
     returns the 4 neighbours of i,j from matrix M with
     boundary restrictions
     """
@@ -105,29 +94,32 @@ def getneighbours( M, i, j ):
 
     return nh.astype(int)
 
+
+#check if neighbor is not out of the lattice
 def valid_neighbour(i,j, Lenght_X, Lenght_Y):
     #check if index is valid
-#     print i,j
     if (0 <= i < Lenght_X) and (0 <= j < Lenght_Y):
         return True
     else:
         return False
 
-def accumulate_payoff(str_p,str_n,Dg,Dr,payoff_func):
+def accumulate_payoff(str_p,str_n,Dg,Dr):
     payoff = 0
-    for i in range(str_n):
-        payoff += payoff_func(str_p, str_n[i], Dg, Dr)
+    for i in range(len(str_n)):
+        payoff += payoff_calc(str_p, str_n[i], Dg, Dr)
     return payoff
 
-def run( initial, generations, Dg, Dr, payoff_func, strategy):
+def run(initial,Dg, Dr,strategy=1, generations=3000, N=70): #3000 generations met 70x70 grid
+    
     """
     - initial holds the initial choice of strategy
     - strat   holds numbers symbolizing the strategy (mapped by num2strat)
-    - nruns   is the number of iterations
     """
+    
     S = np.zeros( (N,N,generations),dtype=np.int ); # strategy array , maakt N op N matrixen n keer aan
     P = np.zeros( (N,N,generations),dtype=np.int ); # payoff   array
-    S[:,:,0]=initial; #initial strategies
+    S[:,:,0]=initial; #initial strategy voor de eerste matrix
+    
     for t in range(generations-1):
         #for all_players: interact_with_neighbors, give_payoff
         for i in range(N):
@@ -137,7 +129,7 @@ def run( initial, generations, Dg, Dr, payoff_func, strategy):
                 #no = getneighbours(P[:,:,t],i,j); # get neighbour payoffs
                 #calculate player payoff = sum of game with his neighbours
                 str_p = S[i,j,t] #strategy of player at [i,j,t]
-                P[i,j,t]=accumulate_payoff(str_p,nh,Dg,Dr,payoff_func)#update payoff
+                P[i,j,t]=accumulate_payoff(str_p,nh,Dg,Dr)#update payoff
                 #P[i,j,t]=np.sum(payoff[np.zeros(nh.shape[0],dtype=np.int)+S[i,j,t], nh ] );
                 #no = getneighbours(P[:,:,t],i,j); # get neighbour payoffs
         #for all_pllayers: choose_random_neighbor, change_strategy?
@@ -146,33 +138,12 @@ def run( initial, generations, Dg, Dr, payoff_func, strategy):
                 #get neighbours strategy
                 nh = getneighbours(S[:,:,t],i,j); # get neighbour strategies
                 no = getneighbours(P[:,:,t],i,j); # get neighbour payoffs
-                #S[i,j,t+1]= Decide_with_prob(S[i,j,t],  P[i,j,t], nh, no, payoff)
                 str_p = S[i,j,t] #strategy of player at [i,j,t]
                 po_p = P[i,j,t] #payoff of player at [i,j,t]
                 S[i,j,t+1]= strat_update(str_p,po_p,nh,no,strategy)
 
-    return (S,P);
+    return S,P;
 
-
-
-def loop(Fc, Payoff, special=False):
-    amount_of_runs = 100
-    result = np.zeros((amount_of_runs,amount_of_runs))
-    initial = np.array([np.random.choice([True,False], p=[Fc,1-Fc]) for i in range(N*N)]).reshape(N,N); # random initial strategies
-    if special:
-        initial = np.array([0 for i in range(N*N)]).reshape(N,N);
-        initial[9,9] = 0
-    for k in range(amount_of_runs):
-        print k
-        (S,P) = run( initial, 100, Payoff);
-        result[k] = fraction_cop(S,N)
-    return average_of_all_runs(result)
-
-
-
-%matplotlib inline
-var = PD
-PD_results = [loop(0.3,var),loop(0.5,var),loop(0.7,var), loop(1,var,True)]
 
 #Makes initial discrite strategy matrix with C = 0.5
 def init_discrete():
@@ -190,18 +161,19 @@ def init_continuos():
     return uniform
 
 #Metagrid of 11 x 11 with parameters Dr and Dg
-
 #20 runs
 def run_experiment():
     axis = np.arange(0.0,1.1,0.1) #11 points
     grid_results = []
     for i in range(20):
+        initial = init_continuos() # random initial strategies
         grid = np.zeros((11, 11))
         for x in range(11):
             Dr = axis[x]
             for y in range(11):
                 Dg = axis[y]
-                result = 1 #>>>> RUN HERE WITH Dr AND Dg PARAMETERS AND ASSIGN TO RESULT <<<
+                S,P = run(initial,Dg,Dr)
+                result=S[:,:,-1] #take the last strategies
                 grid[y,x] =  result #if we save do  grid[y,x] we can print the grid and respect the axisses
         grid_results.append(grid)
     return calculate_mean_grid(grid_results)
@@ -217,3 +189,6 @@ def calculate_mean_grid(grids):
             mean_value = total / amount_of_grids
             mean_grid[i,j] = mean_value
     return mean_grid
+
+
+run_experiment()
