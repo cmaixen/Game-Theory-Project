@@ -52,7 +52,7 @@ def shuffle_two_alligned_lists(list1,list2):
 
 
 #This function should eventually replace Decide_with_prob
-def strat_update(player_strategy, player_payoff, neighbour_strategies, neighbour_payoffs, updaterule=1):
+def strat_update(player_strategy, player_payoff, neighbour_strategies, neighbour_payoffs, updaterule=1, tau=.2):
     """
     Returns updated strategy of player p depending on payoffs
     and strategies of neighbors n.
