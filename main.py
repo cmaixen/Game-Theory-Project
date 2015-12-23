@@ -17,6 +17,8 @@ degree = 8
 # lattice network size
 N=20 #4900 players in a 70x70 grid
 
+generations = 1000
+
 # player's strategies
 #p strategy
 
@@ -146,19 +148,18 @@ def run(initial,Dg, Dr,strategy=1, generations=1000, N=20): #3000 generations me
     - strat   holds numbers symbolizing the strategy (mapped by num2strat)
     """
 
-    eps = 0.005
+    eps = 0.0005
     S = np.zeros( (N,N,generations),dtype=np.float ); # strategy array , maakt N op N matrixen n keer aan
     P = np.zeros( (N,N,generations),dtype=np.float ); # payoff   array
     S[:,:,0]=initial; #initial strategy voor de eerste matrix
     x = calculate_mean_of_matrix(initial)
     x_old = x + 10 * eps
-    print "X::" + str(x) + "||Xold::" + str(x_old)
 
     for t in range(generations-1):
 
         if(abs(x-x_old)<eps and t > 100):
-            print "converged"
-            return S, P
+            print "converged at generation: " + str(t)
+            return S, P, t
 #         print "generation " + str(t)
         #for all_players: interact_with_neighbors, give_payoff
         for i in range(N):
@@ -183,9 +184,10 @@ def run(initial,Dg, Dr,strategy=1, generations=1000, N=20): #3000 generations me
 
         x_old = x
         x = calculate_mean_of_matrix(S[:,:,t])
-        print "X::" + str(x) + "||Xold::" + str(x_old)
+        #print "X::" + str(x) + "||Xold::" + str(x_old)
 
-    return S,P;
+
+    return S,P,t;
 
 
 #Makes initial discrite strategy matrix with C = 0.5
@@ -208,7 +210,7 @@ def init_continuos():
 def run_experiment():
     axis = np.arange(0.0,1.1,0.1) #11 points
     grid_results = []
-    for i in range(20):
+    for i in range(1):
         print 'NEW ITERATION: ' + str(i)
         initial = init_continuos() # random initial strategies
         grid = np.zeros((11, 11))
@@ -217,9 +219,23 @@ def run_experiment():
             for y in range(11):
                 Dg = axis[y]
                 print "Dg Value= " + str(Dg) + "Dr Value= " + str(Dr)
-                S,P = run(initial,Dg,Dr)
-                result=S[:,:,-1] #take the last strategies
-                grid[y,x] = np.mean(result) #if we save do  grid[y,x] we can print the grid and respect the axisses
+                S,P,t = run(initial,Dg,Dr, generations = generations, N=N)
+                if t == generations - 1:
+                    mean = 0
+                    for i in range(100):
+                        result = S[:,:,-i]
+                        m = np.mean(result)
+                        mean += m
+                    grid[y,x] = mean
+                    print "mean: " + str(mean)
+
+                else:
+                    last_index = generations-t
+                    result=S[:,:,-last_index] #take the last strategies
+                    mean = np.mean(result) #if we save do  grid[y,x] we can print the grid and respect the axisses
+                    grid[y,x] = mean
+                    print "mean: " + str(mean)
+
         grid_results.append(grid)
     return calculate_mean_grid(grid_results)
 
