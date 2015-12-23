@@ -15,7 +15,7 @@ SH = np.array([[1, -0.5], [0.5, 0]]) #stag-hunt
 # degree = amount of neighbours
 degree = 8
 # lattice network size
-N=70 #4900 players in a 70x70 grid
+N=20 #4900 players in a 70x70 grid
 
 # player's strategies
 #p strategy
@@ -129,19 +129,37 @@ def accumulate_payoff(str_p,str_n,Dg,Dr):
         payoff += payoff_calc(str_p, str_n[i], Dg, Dr)
     return payoff
 
-def run(initial,Dg, Dr,strategy=1, generations=3000, N=70): #3000 generations met 70x70 grid
-    
+def calculate_mean_of_matrix(M):
+    (Lenght_X,Lenght_Y)=M.shape
+    mean = 0
+    for i in range(Lenght_Y):
+        for j in range(Lenght_X):
+            mean += M[j,i]
+
+    mean = mean / (Lenght_X*Lenght_Y)
+    return mean
+
+def run(initial,Dg, Dr,strategy=1, generations=1000, N=20): #3000 generations met 70x70 grid
+
     """
     - initial holds the initial choice of strategy
     - strat   holds numbers symbolizing the strategy (mapped by num2strat)
     """
-    
+
+    eps = 0.005
     S = np.zeros( (N,N,generations),dtype=np.float ); # strategy array , maakt N op N matrixen n keer aan
     P = np.zeros( (N,N,generations),dtype=np.float ); # payoff   array
     S[:,:,0]=initial; #initial strategy voor de eerste matrix
-    
+    x = calculate_mean_of_matrix(initial)
+    x_old = x + 10 * eps
+    print "X::" + str(x) + "||Xold::" + str(x_old)
+
     for t in range(generations-1):
-#         print "generation " + str(t) 
+
+        if(abs(x-x_old)<eps and t > 100):
+            print "converged"
+            return S, P
+#         print "generation " + str(t)
         #for all_players: interact_with_neighbors, give_payoff
         for i in range(N):
             for j in range(N):
@@ -162,6 +180,10 @@ def run(initial,Dg, Dr,strategy=1, generations=3000, N=70): #3000 generations me
                 str_p = S[i,j,t] #strategy of player at [i,j,t]
                 po_p = P[i,j,t] #payoff of player at [i,j,t]
                 S[i,j,t+1]= strat_update(str_p,po_p,nh,no,strategy)
+
+        x_old = x
+        x = calculate_mean_of_matrix(S[:,:,t])
+        print "X::" + str(x) + "||Xold::" + str(x_old)
 
     return S,P;
 
@@ -238,7 +260,7 @@ import matplotlib.colors as colors
 
 plt.title('Avarage of Fraction of cooperation with continous values')
 # set the limits of the plot to the limits of the data
-X = Y = np.arange(0.0,1.1,0.1) 
+X = Y = np.arange(0.0,1.1,0.1)
 plt.pcolormesh(X,Y,result,cmap=plt.cm.jet, vmin=0.0, vmax=1.0, norm = colors.Normalize() )
 # plt.axis([0.0, 1.0, 0.0, 1.0])
 plt.xlabel('Dr')
@@ -250,4 +272,3 @@ plt.close()
 
 
 ### END PLOT CODE ###
-
