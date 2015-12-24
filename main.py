@@ -2,6 +2,7 @@
 import numpy as np
 import pylab as pl
 import random
+import math
 
 # 0,False - cooperate
 # 1,True  - defect
@@ -51,7 +52,7 @@ def shuffle_two_alligned_lists(list1,list2):
 
 
 #This function should eventually replace Decide_with_prob
-def strat_update(player_strategy, player_payoff, neighbour_strategies, neighbour_payoffs, updaterule=1):
+def strat_update(player_strategy, player_payoff, neighbour_strategies, neighbour_payoffs, updaterule=1, tau=.2):
     """
     Returns updated strategy of player p depending on payoffs
     and strategies of neighbors n.
@@ -64,7 +65,19 @@ def strat_update(player_strategy, player_payoff, neighbour_strategies, neighbour
         payoffs, strategies = shuffle_two_alligned_lists(payoffs,strategies)
         #get index of the max
         stratind = np.argmax(payoffs)
-        return strategies[stratind]
+        new_strategy = strategies[stratind]
+        return new_strategy
+    elif updaterule ==2: #strategy Fermi-PW
+        #select random neighbour
+        index_shuf = range(len(neighbour_payoffs))
+        random.shuffle(index_shuf)
+        nb = index_shuf[1]
+        #calculate probability
+        prob = 1/(1+math.exp( (player_payoff-neighbour_payoffs[nb])/tau ))
+        #update strategy
+        change = np.random.binomial(1,prob)
+        new_strategy = player_strategy*abs(change-1) + neighbour_strategies[nb]*change
+        return new_strategy
 
 
 def getneighbours( M, i, j ):
