@@ -192,7 +192,14 @@ def run(initial,Dg, Dr,strategy=1, generations=1000, N=20): #3000 generations me
 
 #Makes initial discrite strategy matrix with C = 0.5
 def init_discrete():
-    initial = np.array([np.random.choice([True,False], p=[0.5,0.5]) for i in range(N*N)]).reshape(N,N); # random initial strategies
+    ratio = 0.5
+    ratioRange = N*N*ratio
+    inArray = np.zeros(N*N)
+    for i in range(int(ratioRange)):
+        inArray[i] = 1
+    np.random.shuffle(inArray)
+    initial = inArray.reshape(N,N)
+    #initial = np.array([np.random.choice([True,False], p=[0.5,0.5]) for i in range(N*N)]).reshape(N,N); # random initial strategies
     return initial
 
 #Makes initial uniform distributed continuous matrix
@@ -212,7 +219,7 @@ def run_experiment():
     grid_results = []
     for i in range(10):
         print 'NEW ITERATION: ' + str(i)
-        initial = init_continuos() # random initial strategies
+        initial = init_discrete() # random initial strategies
         grid = np.zeros((11, 11))
         for x in range(11):
             Dr = axis[x]
