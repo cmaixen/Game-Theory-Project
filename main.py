@@ -250,7 +250,9 @@ def run_experiment():
                     print "mean: " + str(mean)
 
         grid_results.append(grid)
-    return calculate_mean_grid(grid_results)
+        mean = calculate_mean_grid(grid_results)
+        variance = calculate_variance_grid(grid_results)
+        return mean, variance
 
 def calculate_mean_grid(grids):
     amount_of_grids,rows,columns = np.array(grids).shape
@@ -264,11 +266,17 @@ def calculate_mean_grid(grids):
             mean_grid[i,j] = mean_value
     return mean_grid
 
+def calculate_variance_grid(grids):
+    amount_of_grids, rows, columns = np.array(grids).shape
+    variance_grid = np.zeros((11,11))
+    var = np.var(grids, axis = 2)
+    return var_grid
+
 
 
 ### START EXPERIMENT ###
 
-result = run_experiment()
+result, variance = run_experiment()
 
 
 ### SAVE RESULT ###
